@@ -7,7 +7,7 @@ ipython
 ipywidgets
 lightning==2.6.0
 matplotlib==3.10.8
-numpy==1.26.4
+numpy>=1.26.4
 opencv-python-headless==4.12.0.88
 pandas==3.0.0
 PuLP==3.3.0
