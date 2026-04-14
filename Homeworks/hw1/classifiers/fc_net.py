@@ -44,7 +44,7 @@ self.params, который сопоставляет имена параметр
         self.reg = reg
 
         ############################################################################
-       # TODO: Инициализировать веса и смещения двухслойной сети. Веса 
+      # TODO: Инициализировать веса и смещения двухслойной сети. Веса 
       # должны быть инициализированы гауссовым распределением с центром в точке 0,0 и
       # стандартным отклонением, равным weight_scale, а смещения должны быть
       # инициализированы нулем. Все веса и смещения должны храниться в
@@ -54,7 +54,10 @@ self.params, который сопоставляет имена параметр
       
         ############################################################################
         self.params = {
-          ...
+          'W1': np.random.randn(input_dim, hidden_dim) * weight_scale,
+          'b1': np.zeros(hidden_dim),
+          'W2': np.random.randn(hidden_dim, num_classes) * weight_scale,
+          'b2': np.zeros(num_classes)
         }
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -82,7 +85,14 @@ scores[i, c] — оценка классификации для X[i] и клас
         # TODO: Реализовать прямой проход для двухслойной сети, вычисляя 
         # оценки классов для X и сохраняя их в переменной scores. 
         ############################################################################
-        
+        W1 = self.params['W1']
+        b1 = self.params['b1']
+        W2 = self.params['W2']
+        b2 = self.params['b2']
+
+        out1, cache1 = affine_forward(X, W1, b1)
+        out2, cache2 = relu_forward(out1)
+        scores, cache3 = affine_forward(out2, W2, b2)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -102,11 +112,21 @@ scores[i, c] — оценка классификации для X[i] и клас
         # автоматизированные тесты, убедитесь, что ваша L2-регуляризация включает множитель #
         # равный 0,5 для упрощения выражения для градиента. #
         ############################################################################
-        loss, dloss = ...
+        loss, dloss = softmax_loss(scores, y)
         # Убедимся что реализация включает L2 регуляризацию 
         loss += 0.5 * self.reg * (np.sum(W1**2) + np.sum(W2**2))
         # далее обновим параметры с новыми новыми значениями градиентов
-        ...
+        dout2, dW2, db2 = affine_backward(dloss, cache3)
+        dout1 = relu_backward(dout2, cache2)
+        dX, dW1, db1 = affine_backward(dout1, cache1)
+
+        dW1 += self.reg * W1
+        dW2 += self.reg * W2
+
+        grads['W1'] = dW1
+        grads['b1'] = db1
+        grads['W2'] = dW2
+        grads['b2'] = db2
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -114,21 +134,21 @@ scores[i, c] — оценка классификации для X[i] и клас
         return loss, grads
 
     def save(self, fname):
-      """Save model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      params = self.params
-      np.save(fpath, params)
-      print(fname, "saved.")
+        """Save model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        params = self.params
+        np.save(fpath, params)
+        print(fname, "saved.")
     
     def load(self, fname):
-      """Load model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      if not os.path.exists(fpath):
-        print(fname, "not available.")
-        return False
-      else:
-        params = np.load(fpath, allow_pickle=True).item()
-        self.params = params
-        print(fname, "loaded.")
-        return True
+        """Load model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        if not os.path.exists(fpath):
+            print(fname, "not available.")
+            return False
+        else:
+            params = np.load(fpath, allow_pickle=True).item()
+            self.params = params
+            print(fname, "loaded.")
+            return True
 
